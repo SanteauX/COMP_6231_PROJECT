@@ -33,25 +33,24 @@ __DATASET_METADATA_CSV_FILENAME = 'HAM10000_metadata.csv'
 __PICKLED_METADATA_FILENAME = 'metadata.pkl'
 __MODEL_FILENAME = 'model.h5'
 
-
 def lambda_handler(event, context):
+    print("\n\n\n------------------- START -------------------\n\n\n")
 
 ###################################### STEP 1: GET MODEL FROM S3 ##################################
     try:
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(__S3_BUCKET_NAME)
         s3.Bucket(__S3_BUCKET_NAME).download_file(__MODEL_FILENAME, '/tmp/model.h5')
-        model = keras.models.load_model("/tmp/model.h5")
-
-        print(f"successfully got model from S3")
+        model = keras.models.load_model("/tmp/model.h5") # To run on AWS
+        #model = keras.models.load_model("model.h5")      # To run locally
+        #print(f"successfully got model from S3")
 
     except Exception as e:
         raise e
 
 ###################################### STEP 2: GET IMAGE READY FOR MODEL ##########################
 
-    print("print working directory"+os.getcwd())
-    write_to_file("/tmp/picture.jpg", event["body"])                                                # Write picture in temporary
+    write_to_file("/tmp/picture.jpg", event["body"])                                                # Write picture in temp folder
 
     image = tf.keras.preprocessing.image.load_img("/tmp/picture.jpg", target_size=(224, 224))       # Resize image
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
@@ -60,11 +59,9 @@ def lambda_handler(event, context):
 ###################################### STEP 3: PREDICT ############################################
 
     predictions = model.predict(input_arr)
-    print("great success")
     print("prediction: "+predictions)
 
 ###################################### STEP 4: RETURN RESULT ######################################
-
 
     return {
         "statusCode" : 200,
