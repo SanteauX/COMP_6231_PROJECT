@@ -1,9 +1,0 @@
-opencv-python
-boto3
-pandas
-numpy
-keras
-sklearn
-matplotlib
-tensorflow
-tensorflow_hub
