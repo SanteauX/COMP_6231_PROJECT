@@ -127,7 +127,7 @@ def lambda_handler(event, context):
         "headers" : {
             "Content-Type" : "application/json"
         },
-        "body" : resultDict,
+        "body" : str(resultDict),
         "isBase64Encoded" : False
     }
 

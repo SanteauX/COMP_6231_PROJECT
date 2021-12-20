@@ -1,4 +1,14 @@
 {
-    "numFilesProcess" : 50,
-    "objectLock" : true
+    "resource": "/train",
+    "path": "/train",
+    "httpMethod": "POST",
+    "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+    },
+    "body": {
+        "numFilesProcess": 50,
+        "objectLock": true
+    },
+    "isBase64Encoded": false
 }

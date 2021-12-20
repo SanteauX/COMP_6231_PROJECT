@@ -36,17 +36,17 @@ s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
 
-    if "numFilesProcess" not in event.keys():
+    if "numFilesProcess" not in event['body'].keys():
         return {
             "statusCode" : 400,
             "headers" : {
-                "Content-Type" : "application/json"
+                "content-type" : "application/json"
             },
             "body" : "Bad Request",
             "isBase64Encoded" : False
         }
 
-    model = train(generate_metadata(), event['numFilesProcess'])
+    model = train(generate_metadata(), event['body']['numFilesProcess'])
     model.save('/tmp/model.h5')
 
     isUploaded = False
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     # obtain object lock and release it when we successfully upload to S3
     try:
         s3 = boto3.client('s3')
-        if event['objectLock']:
+        if event['body']['objectLock']:
             s3.put_object_legal_hold(
                 Bucket=__S3_BUCKET_NAME,
                 Key=__MODEL_FILENAME,
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
             s3.upload_fileobj(data, __S3_BUCKET_NAME, __MODEL_FILENAME)
         isUploaded = True
         print(f"successfully uploaded model to S3")
-        if event['objectLock']:
+        if event['body']['objectLock']:
             s3.put_object_legal_hold(
                 Bucket=__S3_BUCKET_NAME,
                 Key=__MODEL_FILENAME,
@@ -87,7 +87,7 @@ def lambda_handler(event, context):
             "Content-Type" : "application/json"
         },
         "body" : {
-            "numFilesProcessed" : event['numFilesProcess'],
+            "numFilesProcessed" : event['body']['numFilesProcess'],
             "uploaded" : isUploaded
         },
         "isBase64Encoded" : False
