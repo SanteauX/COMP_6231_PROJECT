@@ -9,6 +9,7 @@ import base64
 import keras
 import os, shutil
 import random
+import json
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg19 import VGG19
@@ -36,7 +37,7 @@ s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
 
-    if "numFilesProcess" not in event['body'].keys():
+    if "numFilesProcess" not in event.keys():
         return {
             "statusCode" : 400,
             "headers" : {
@@ -46,7 +47,7 @@ def lambda_handler(event, context):
             "isBase64Encoded" : False
         }
 
-    model = train(generate_metadata(), event['body']['numFilesProcess'])
+    model = train(generate_metadata(), event['numFilesProcess'])
     model.save('/tmp/model.h5')
 
     isUploaded = False
@@ -54,7 +55,7 @@ def lambda_handler(event, context):
     # obtain object lock and release it when we successfully upload to S3
     try:
         s3 = boto3.client('s3')
-        if event['body']['objectLock']:
+        if event['objectLock']:
             s3.put_object_legal_hold(
                 Bucket=__S3_BUCKET_NAME,
                 Key=__MODEL_FILENAME,
@@ -68,7 +69,7 @@ def lambda_handler(event, context):
             s3.upload_fileobj(data, __S3_BUCKET_NAME, __MODEL_FILENAME)
         isUploaded = True
         print(f"successfully uploaded model to S3")
-        if event['body']['objectLock']:
+        if event['objectLock']:
             s3.put_object_legal_hold(
                 Bucket=__S3_BUCKET_NAME,
                 Key=__MODEL_FILENAME,
@@ -86,10 +87,7 @@ def lambda_handler(event, context):
         "headers" : {
             "Content-Type" : "application/json"
         },
-        "body" : {
-            "numFilesProcessed" : event['body']['numFilesProcess'],
-            "uploaded" : isUploaded
-        },
+        "body" : json.dumps({"numFilesProcessed" : event['numFilesProcess']}),
         "isBase64Encoded" : False
     }
 
